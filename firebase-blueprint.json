@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Represents a student enrolled in a teacher's class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "teacherId": { "type": "string", "description": "The UID of the teacher" },
+        "name": { "type": "string" },
+        "grade": { "type": "string" },
+        "isHearingImpaired": { "type": "boolean" },
+        "isVisuallyImpaired": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Online", "Offline", "In Class"] },
+        "lastActive": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "teacherId", "name", "grade", "isHearingImpaired", "isVisuallyImpaired", "status", "lastActive", "createdAt", "updatedAt"]
+    },
+    "Period": {
+      "title": "Period",
+      "description": "Represents a class period for the schedule",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "time": { "type": "string" },
+        "subject": { "type": "string" },
+        "topic": { "type": "string" },
+        "book": { "type": "string" },
+        "materials": { 
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "videoRecorded": { "type": "boolean" },
+        "homework": { "type": "string" },
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "teacherId", "time", "subject", "topic", "book", "materials", "videoRecorded", "homework", "date", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Store all students for teachers"
+    },
+    "/periods/{periodId}": {
+      "schema": { "$ref": "#/entities/Period" },
+      "description": "Store all daily schedule periods for teachers"
+    }
+  }
+}

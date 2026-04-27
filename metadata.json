@@ -1,0 +1,9 @@
+{
+  "name": "Inclusive Classroom Dashboard",
+  "description": "Teacher dashboard to monitor students, categorizing them securely with specific accommodations for visually and hearing-impaired students.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll(['id', 'teacherId', 'name', 'grade', 'isHearingImpaired', 'isVisuallyImpaired', 'status', 'lastActive', 'createdAt', 'updatedAt']) 
+             && data.keys().size() == 10
+             && data.id is string && data.id.size() <= 128
+             && data.teacherId == request.auth.uid
+             && data.name is string && data.name.size() <= 128
+             && data.grade is string && data.grade.size() <= 64
+             && data.isHearingImpaired is bool
+             && data.isVisuallyImpaired is bool
+             && data.status in ['Online', 'Offline', 'In Class']
+             && data.lastActive is string && data.lastActive.size() <= 64
+             && data.createdAt is timestamp
+             && data.updatedAt is timestamp;
+    }
+
+    function isValidPeriod(data) {
+      return data.keys().hasAll(['id', 'teacherId', 'time', 'subject', 'topic', 'book', 'materials', 'videoRecorded', 'homework', 'date', 'createdAt', 'updatedAt']) 
+             && (data.keys().size() == 12 || (data.keys().hasAll(['videoLink']) && data.keys().size() == 13))
+             && data.id is string && data.id.size() <= 128
+             && data.teacherId == request.auth.uid
+             && data.time is string && data.time.size() <= 64
+             && data.subject is string && data.subject.size() <= 128
+             && data.topic is string && data.topic.size() <= 200
+             && data.book is string && data.book.size() <= 200
+             && data.materials is list && data.materials.size() <= 20
+             && (data.materials.size() == 0 || data.materials[0] is string)
+             && data.videoRecorded is bool
+             && (!data.keys().hasAll(['videoLink']) || (data.videoLink is string && data.videoLink.size() <= 500))
+             && data.homework is string && data.homework.size() <= 500
+             && data.date is string && data.date.size() <= 32
+             && data.createdAt is timestamp
+             && data.updatedAt is timestamp;
+    }
+
+    match /students/{studentId} {
+      allow get: if isSignedIn() && existing().teacherId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(studentId) 
+                    && incoming().id == studentId
+                    && isValidStudent(incoming())
+                    && incoming().createdAt == request.time
+                    && incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(studentId)
+                    && isValidStudent(incoming())
+                    && existing().teacherId == request.auth.uid
+                    && incoming().teacherId == existing().teacherId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().updatedAt == request.time
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'grade', 'isHearingImpaired', 'isVisuallyImpaired', 'status', 'lastActive', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(studentId) && existing().teacherId == request.auth.uid;
+    }
+
+    match /periods/{periodId} {
+      allow get: if isSignedIn() && existing().teacherId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(periodId) 
+                    && incoming().id == periodId
+                    && isValidPeriod(incoming())
+                    && incoming().createdAt == request.time
+                    && incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(periodId)
+                    && isValidPeriod(incoming())
+                    && existing().teacherId == request.auth.uid
+                    && incoming().teacherId == existing().teacherId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().updatedAt == request.time
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['time', 'subject', 'topic', 'book', 'materials', 'videoRecorded', 'videoLink', 'homework', 'date', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(periodId) && existing().teacherId == request.auth.uid;
+    }
+  }
+}
