@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Youtube, UploadCloud, Play, Pause, FastForward, Rewind, Headphones, Loader2, Sparkles, Volume2, CheckCircle2 } from 'lucide-react';
 
-export default function AudioOverview() {
+export default function AudioOverview({ theme = 'dark' }: { theme?: 'light' | 'dark' }) {
   const [sourceType, setSourceType] = useState<'upload' | 'youtube'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -50,45 +50,45 @@ export default function AudioOverview() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full space-y-6"
         >
-          <div className="mb-8 text-center bg-indigo-500/10 border border-indigo-500/20 p-8 rounded-3xl">
+          <div className={`mb-8 text-center ${theme === 'dark' ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-white border-zinc-200 shadow-xl'} border p-8 rounded-3xl`}>
             <div className="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/20">
               <Headphones className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-white mb-3">AI Audio Overview</h2>
-            <p className="text-indigo-200">Transform documents and lecture videos into an engaging podcast-style audio summary.</p>
+            <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'} mb-3`}>AI Audio Overview</h2>
+            <p className={`${theme === 'dark' ? 'text-indigo-200' : 'text-indigo-600'}`}>Transform documents and lecture videos into an engaging podcast-style audio summary.</p>
           </div>
 
           <div className="flex gap-4 mb-6">
             <button 
               onClick={() => setSourceType('upload')}
-              className={`flex-1 py-4 flex flex-col items-center gap-2 rounded-2xl border-2 transition-all ${sourceType === 'upload' ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800'}`}
+              className={`flex-1 py-4 flex flex-col items-center gap-2 rounded-2xl border-2 transition-all ${sourceType === 'upload' ? 'border-indigo-500 bg-indigo-500/10' : `${theme === 'dark' ? 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800' : 'border-zinc-200 bg-white hover:bg-zinc-50'}`}`}
             >
               <UploadCloud className={`w-6 h-6 ${sourceType === 'upload' ? 'text-indigo-400' : 'text-zinc-400'}`} />
               <span className={`font-semibold ${sourceType === 'upload' ? 'text-indigo-300' : 'text-zinc-400'}`}>Upload PDF/Doc</span>
             </button>
             <button 
               onClick={() => setSourceType('youtube')}
-              className={`flex-1 py-4 flex flex-col items-center gap-2 rounded-2xl border-2 transition-all ${sourceType === 'youtube' ? 'border-rose-500 bg-rose-500/10' : 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800'}`}
+              className={`flex-1 py-4 flex flex-col items-center gap-2 rounded-2xl border-2 transition-all ${sourceType === 'youtube' ? 'border-rose-500 bg-rose-500/10' : `${theme === 'dark' ? 'border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800' : 'border-zinc-200 bg-white hover:bg-zinc-50'}`}`}
             >
               <Youtube className={`w-6 h-6 ${sourceType === 'youtube' ? 'text-rose-400' : 'text-zinc-400'}`} />
               <span className={`font-semibold ${sourceType === 'youtube' ? 'text-rose-300' : 'text-zinc-400'}`}>YouTube Video</span>
             </button>
           </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-xl">
+          <div className={`${theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-xl'} border rounded-3xl p-8`}>
             {sourceType === 'upload' ? (
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-zinc-700 hover:border-indigo-500 bg-zinc-900/50 hover:bg-zinc-800/80 transition-all rounded-2xl p-12 cursor-pointer flex flex-col items-center justify-center"
+                className={`border-2 border-dashed ${theme === 'dark' ? 'border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800/80' : 'border-zinc-300 bg-zinc-50 hover:bg-zinc-100'} transition-all rounded-2xl p-12 cursor-pointer flex flex-col items-center justify-center`}
               >
                 <UploadCloud className="w-12 h-12 text-indigo-400 mb-4" />
-                <h3 className="text-lg font-bold text-white mb-1">{file ? file.name : "Drag & Drop your document here"}</h3>
+                <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'} mb-1`}>{file ? file.name : "Drag & Drop your document here"}</h3>
                 <p className="text-zinc-500 text-sm">{file ? `${(file.size/1024/1024).toFixed(2)} MB` : "Supports PDF, DOCX, TXT"}</p>
                 <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".pdf,.docx,.txt" />
               </div>
             ) : (
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-zinc-400">Paste YouTube URL</label>
+                <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>Paste YouTube URL</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                      <Youtube className="w-5 h-5 text-zinc-500" />
@@ -98,7 +98,7 @@ export default function AudioOverview() {
                     value={youtubeUrl}
                     onChange={(e) => setYoutubeUrl(e.target.value)}
                     placeholder="https://www.youtube.com/watch?v=..."
-                    className="w-full bg-zinc-950 border border-zinc-800 text-white pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                    className={`w-full ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'} border pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all`}
                   />
                 </div>
               </div>

@@ -19,9 +19,11 @@ import {
   LogOut,
   LogIn,
   Plus,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-react';
-import { auth, db, loginAnonymously, logout } from './firebase';
+import { auth, db, loginWithGoogle, logout } from './firebase';
 import { collection, onSnapshot, query, where, doc, setDoc, getDocs, getDocFromServer, serverTimestamp } from 'firebase/firestore';
 
 import { handleFirestoreError, OperationType } from './firestore-error';
@@ -87,7 +89,22 @@ import { UploadCloud, Headphones, Accessibility } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState(auth.currentUser);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
+    }
+    return 'dark';
+  });
   const [currentTab, setCurrentTab] = useState<'students' | 'schedule' | 'live' | 'upload' | 'audio' | 'tools'>('schedule');
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [students, setStudents] = useState<Student[]>([]);
@@ -194,8 +211,6 @@ export default function App() {
         } catch (error) {
           handleFirestoreError(error, OperationType.GET, 'periods');
         }
-      } else {
-        loginAnonymously();
       }
     });
     return unsub;
@@ -233,35 +248,64 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="flex h-screen bg-[#09090b] text-zinc-100 font-sans items-center justify-center">
-        <div className="flex flex-col items-center">
-           <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-           <p className="text-zinc-500 font-medium">Loading Dashboard...</p>
+      <div className={`flex h-screen ${theme === 'dark' ? 'bg-[#09090b] text-zinc-100' : 'bg-zinc-50 text-zinc-900'} font-sans items-center justify-center transition-colors duration-300`}>
+        <div className={`${theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'} border p-8 rounded-3xl max-w-md w-full text-center shadow-2xl`}>
+          <div className="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/20">
+            <BookOpen className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">EduMonitor Hub</h1>
+          <p className={`${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-600'} mb-8`}>Sign in to access your dashboard and manage your inclusive classroom.</p>
+          <button 
+            onClick={loginWithGoogle}
+            className={`w-full flex items-center justify-center gap-3 px-4 py-3 ${theme === 'dark' ? 'bg-white text-black hover:bg-zinc-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'} font-semibold rounded-xl transition-colors`}
+          >
+            <LogIn className="w-5 h-5" />
+            Sign in with Google
+          </button>
         </div>
+        <button 
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className={`absolute top-6 right-6 p-3 rounded-full ${theme === 'dark' ? 'bg-zinc-800 text-yellow-400' : 'bg-zinc-200 text-indigo-600'} hover:scale-110 transition-all shadow-lg`}
+        >
+          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#09090b] text-zinc-100 font-sans p-4 sm:p-8 overflow-hidden">
+    <div className={`flex flex-col h-screen ${theme === 'dark' ? 'bg-[#09090b] text-zinc-100' : 'bg-zinc-50 text-zinc-900'} font-sans p-4 sm:p-8 overflow-hidden transition-colors duration-300`}>
       {/* Header */}
-      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 border-b border-zinc-800 pb-6 gap-4">
+      <header className={`flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 border-b ${theme === 'dark' ? 'border-zinc-800' : 'border-zinc-200'} pb-6 gap-4`}>
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-900/20">
             <Users className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Instructor Control Hub</h1>
-            <p className="text-zinc-500 text-sm font-medium">Welcome, {user.displayName || 'Teacher'}</p>
+            <p className={`${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'} text-sm font-medium`}>Welcome, {user.displayName || 'Teacher'}</p>
           </div>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Class Status</span>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              <span className="text-emerald-400 font-mono text-sm">ACTIVE</span>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className={`p-3 rounded-full ${theme === 'dark' ? 'bg-zinc-800 text-yellow-400' : 'bg-zinc-200 text-indigo-600'} hover:scale-110 transition-all`}
+            title="Toggle Theme"
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'} uppercase tracking-widest font-bold`}>Class Status</span>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="text-emerald-400 font-mono text-sm">ACTIVE</span>
+              </div>
             </div>
+            <div className={`w-px h-10 ${theme === 'dark' ? 'bg-zinc-800' : 'bg-zinc-200'}`}></div>
+            <button onClick={logout} className={`p-3 ${theme === 'dark' ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-200 hover:bg-zinc-300'} rounded-full hover:text-rose-400 transition-colors`} title="Logout">
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
@@ -273,42 +317,42 @@ export default function App() {
         <aside className="w-full md:w-64 flex flex-col gap-2 shrink-0">
           <button 
             onClick={() => setCurrentTab('students')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'students' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-zinc-500 bg-zinc-900/50 border border-transparent hover:bg-zinc-800/80 hover:text-zinc-300'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'students' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : `${theme === 'dark' ? 'text-zinc-500 bg-zinc-900/50 hover:bg-zinc-800/80 hover:text-zinc-300' : 'text-zinc-500 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-700'} border border-transparent`}`}
           >
             <Users className="w-5 h-5" />
             Students View
           </button>
           <button 
             onClick={() => setCurrentTab('schedule')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'schedule' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-zinc-500 bg-zinc-900/50 border border-transparent hover:bg-zinc-800/80 hover:text-zinc-300'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'schedule' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : `${theme === 'dark' ? 'text-zinc-500 bg-zinc-900/50 hover:bg-zinc-800/80 hover:text-zinc-300' : 'text-zinc-500 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-700'} border border-transparent`}`}
           >
             <Calendar className="w-5 h-5" />
             Schedule
           </button>
           <button 
             onClick={() => setCurrentTab('live')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'live' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-zinc-500 bg-zinc-900/50 border border-transparent hover:bg-zinc-800/80 hover:text-zinc-300'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'live' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : `${theme === 'dark' ? 'text-zinc-500 bg-zinc-900/50 hover:bg-zinc-800/80 hover:text-zinc-300' : 'text-zinc-500 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-700'} border border-transparent`}`}
           >
             <Video className="w-5 h-5 ml-0.5" />
             Live Demo Tracker
           </button>
           <button 
             onClick={() => setCurrentTab('upload')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'upload' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-zinc-500 bg-zinc-900/50 border border-transparent hover:bg-zinc-800/80 hover:text-zinc-300'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'upload' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : `${theme === 'dark' ? 'text-zinc-500 bg-zinc-900/50 hover:bg-zinc-800/80 hover:text-zinc-300' : 'text-zinc-500 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-700'} border border-transparent`}`}
           >
             <UploadCloud className="w-5 h-5 ml-0.5" />
             Content Upload
           </button>
           <button 
             onClick={() => setCurrentTab('audio')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'audio' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-zinc-500 bg-zinc-900/50 border border-transparent hover:bg-zinc-800/80 hover:text-zinc-300'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'audio' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : `${theme === 'dark' ? 'text-zinc-500 bg-zinc-900/50 hover:bg-zinc-800/80 hover:text-zinc-300' : 'text-zinc-500 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-700'} border border-transparent`}`}
           >
             <Headphones className="w-5 h-5 ml-0.5" />
             Audio Overview
           </button>
           <button 
             onClick={() => setCurrentTab('tools')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'tools' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-zinc-500 bg-zinc-900/50 border border-transparent hover:bg-zinc-800/80 hover:text-zinc-300'}`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${currentTab === 'tools' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : `${theme === 'dark' ? 'text-zinc-500 bg-zinc-900/50 hover:bg-zinc-800/80 hover:text-zinc-300' : 'text-zinc-500 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-700'} border border-transparent`}`}
           >
             <Accessibility className="w-5 h-5 ml-0.5" />
             Accessibility Tools
@@ -318,52 +362,52 @@ export default function App() {
         {/* Dynamic Content */}
         <main className="flex-1 overflow-y-auto pr-2">
           {currentTab === 'upload' ? (
-            <ContentUpload />
+            <ContentUpload theme={theme} />
           ) : currentTab === 'audio' ? (
-             <AudioOverview />
+             <AudioOverview theme={theme} />
           ) : currentTab === 'tools' ? (
-             <ToolsDirectory />
+             <ToolsDirectory theme={theme} />
           ) : currentTab === 'live' ? (
-             <LiveRecording />
+             <LiveRecording theme={theme} />
           ) : currentTab === 'schedule' ? (
             <div className="space-y-6 max-w-4xl">
               <div className="flex justify-between items-center mb-4">
-                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                 <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'} flex items-center gap-2`}>
                     <span className="w-2 h-2 bg-indigo-500 rounded-full"></span> Today's Schedule
                  </h2>
                  <button 
                   onClick={() => setIsAddScheduleModalOpen(true)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-900/20"
+                  className={`px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-900/20`}
                  >
                    <Plus className="w-4 h-4" /> Add Period
                  </button>
               </div>
               <div className="grid grid-cols-1 gap-6">
                 {periods.map(period => (
-                  <div key={period.id} className="flex flex-col sm:flex-row bg-zinc-900/40 border border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
-                    <div className="bg-zinc-800/30 p-6 flex flex-col justify-center sm:w-64 shrink-0 border-b sm:border-b-0 sm:border-r border-zinc-800">
+                  <div key={period.id} className={`flex flex-col sm:flex-row ${theme === 'dark' ? 'bg-zinc-900/40 border-zinc-800' : 'bg-white border-zinc-200 shadow-xl'} border rounded-3xl overflow-hidden shadow-sm transition-colors duration-300`}>
+                    <div className={`${theme === 'dark' ? 'bg-zinc-800/30 border-zinc-800' : 'bg-zinc-50 border-zinc-200'} p-6 flex flex-col justify-center sm:w-64 shrink-0 border-b sm:border-b-0 sm:border-r`}>
                        <Clock className="w-6 h-6 text-indigo-400 mb-2" />
-                       <p className="font-bold text-zinc-100">{period.time}</p>
+                       <p className={`font-bold ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>{period.time}</p>
                        <span className="mt-2 text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-1 rounded-md self-start">
                          {period.subject}
                        </span>
                     </div>
                     <div className="p-6 flex-1 space-y-4">
-                       <h4 className="text-lg font-semibold text-zinc-100">{period.topic}</h4>
+                       <h4 className={`text-lg font-semibold ${theme === 'dark' ? 'text-zinc-100' : 'text-zinc-900'}`}>{period.topic}</h4>
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-4">
                              <div className="flex items-start gap-3 text-sm">
                                 <BookOpen className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
                                 <div>
-                                   <p className="font-semibold text-zinc-400 text-xs uppercase tracking-wider mb-1">Book / Resource</p>
-                                   <p className="text-zinc-300">{period.book}</p>
+                                   <p className={`font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'} text-xs uppercase tracking-wider mb-1`}>Book / Resource</p>
+                                   <p className={`${theme === 'dark' ? 'text-zinc-300' : 'text-zinc-700'}`}>{period.book}</p>
                                 </div>
                              </div>
                              <div className="flex items-start gap-3 text-sm">
                                 <FileText className="w-5 h-5 text-zinc-500 shrink-0 mt-0.5" />
                                 <div>
-                                   <p className="font-semibold text-zinc-400 text-xs uppercase tracking-wider mb-1">Materials Used</p>
-                                   <ul className="list-disc list-inside text-zinc-300">
+                                   <p className={`font-semibold ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'} text-xs uppercase tracking-wider mb-1`}>Materials Used</p>
+                                   <ul className={`list-disc list-inside ${theme === 'dark' ? 'text-zinc-300' : 'text-zinc-700'}`}>
                                       {period.materials.map((m, i) => <li key={i}>{m}</li>)}
                                    </ul>
                                 </div>
@@ -437,13 +481,13 @@ export default function App() {
             <div className="space-y-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                  <div className="relative w-full sm:w-80">
-                   <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                   <Search className={`w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`} />
                    <input 
                      type="text" 
                      placeholder="Search students..." 
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     className="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-zinc-200 placeholder-zinc-500 transition-shadow"
+                     className={`w-full pl-10 pr-4 py-2 ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800 text-zinc-200 placeholder-zinc-500' : 'bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400'} border rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all`}
                    />
                  </div>
                  <button 
@@ -456,13 +500,13 @@ export default function App() {
 
               {/* Students Content */}
               <div className="flex flex-col lg:flex-row gap-6">
-                <section className="flex-1 flex flex-col bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6">
+                <section className={`flex-1 flex flex-col ${theme === 'dark' ? 'bg-zinc-900/40 border-zinc-800' : 'bg-white border-zinc-200 shadow-xl'} border rounded-3xl p-6`}>
                   <div className="flex justify-between items-center mb-6">
                     <div className="space-y-1">
-                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                      <h2 className={`text-lg font-semibold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
                         <span className="w-2 h-2 justify-center bg-purple-500 rounded-full"></span> Hearing-Impaired Students
                       </h2>
-                      <p className="text-xs text-zinc-500">Visual & sign language support needed</p>
+                      <p className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Visual & sign language support needed</p>
                     </div>
                     <span className="text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded-md">
                       {filteredStudents.filter(s => s.isHearingImpaired).length} STUDENTS
@@ -473,15 +517,15 @@ export default function App() {
                         <div 
                            key={student.id} 
                            onClick={() => setSelectedStudent(student)}
-                           className="bg-zinc-800/50 border border-zinc-700/50 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:border-zinc-500 transition-colors cursor-pointer"
+                           className={`${theme === 'dark' ? 'bg-zinc-800/50 border-zinc-700/50 hover:border-zinc-500' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'} p-4 rounded-2xl flex items-center justify-between shadow-sm transition-colors cursor-pointer border`}
                         >
                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 relative">
+                              <div className={`w-10 h-10 rounded-full ${theme === 'dark' ? 'bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-zinc-100 border-zinc-200 text-zinc-500'} flex items-center justify-center relative border`}>
                                 <UserCircle className="w-6 h-6" />
                                 {student.status === 'Online' && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border border-zinc-800"></span>}
                               </div>
                               <div>
-                                <span className="font-medium text-sm text-zinc-200 block">{student.name}</span>
+                                <span className={`font-medium text-sm ${theme === 'dark' ? 'text-zinc-200' : 'text-zinc-900'} block`}>{student.name}</span>
                                 <span className="text-xs text-zinc-500">{student.grade}</span>
                               </div>
                            </div>
@@ -494,13 +538,13 @@ export default function App() {
                   </div>
                 </section>
 
-                <section className="flex-1 flex flex-col bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6">
+                <section className={`flex-1 flex flex-col ${theme === 'dark' ? 'bg-zinc-900/40 border-zinc-800' : 'bg-white border-zinc-200 shadow-xl'} border rounded-3xl p-6`}>
                   <div className="flex justify-between items-center mb-6">
                     <div className="space-y-1">
-                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                      <h2 className={`text-lg font-semibold flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
                         <span className="w-2 h-2 bg-orange-500 rounded-full"></span> Visually-Impaired Students
                       </h2>
-                      <p className="text-xs text-zinc-500">Audio descriptions & screen reader support</p>
+                      <p className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>Audio descriptions & screen reader support</p>
                     </div>
                     <span className="text-xs bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded-md">
                       {filteredStudents.filter(s => s.isVisuallyImpaired).length} STUDENTS
@@ -511,15 +555,15 @@ export default function App() {
                         <div 
                            key={student.id} 
                            onClick={() => setSelectedStudent(student)}
-                           className="bg-zinc-800/50 border border-zinc-700/50 p-4 rounded-2xl flex items-center justify-between shadow-sm hover:border-zinc-500 transition-colors cursor-pointer"
+                           className={`${theme === 'dark' ? 'bg-zinc-800/50 border-zinc-700/50 hover:border-zinc-500' : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'} p-4 rounded-2xl flex items-center justify-between shadow-sm transition-colors cursor-pointer border`}
                         >
                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 relative">
+                              <div className={`w-10 h-10 rounded-full ${theme === 'dark' ? 'bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-zinc-100 border-zinc-200 text-zinc-500'} flex items-center justify-center relative border`}>
                                 <UserCircle className="w-6 h-6" />
                                 {student.status === 'Online' && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border border-zinc-800"></span>}
                               </div>
                               <div>
-                                <span className="font-medium text-sm text-zinc-200 block">{student.name}</span>
+                                <span className={`font-medium text-sm ${theme === 'dark' ? 'text-zinc-200' : 'text-zinc-900'} block`}>{student.name}</span>
                                 <span className="text-xs text-zinc-500">{student.grade}</span>
                               </div>
                            </div>

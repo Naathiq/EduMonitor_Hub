@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { UploadCloud, FileType, CheckCircle2, Loader2, Sparkles, FileAudio, FileVideo, FileText, Settings2 } from 'lucide-react';
 
-export default function ContentUpload() {
+export default function ContentUpload({ theme = 'dark' }: { theme?: 'light' | 'dark' }) {
   const [file, setFile] = useState<File | null>(null);
   const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'uploaded' | 'generating' | 'done'>('idle');
   
@@ -68,18 +68,18 @@ export default function ContentUpload() {
           className="w-full text-center space-y-6"
         >
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-white mb-3">Upload Learning Materials</h2>
-            <p className="text-zinc-400">Upload documents, videos, or presentations to automatically generate accessible formats.</p>
+            <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'} mb-3`}>Upload Learning Materials</h2>
+            <p className={`${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>Upload documents, videos, or presentations to automatically generate accessible formats.</p>
           </div>
 
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-zinc-700 hover:border-indigo-500 bg-zinc-900/50 hover:bg-zinc-800/80 transition-all rounded-3xl p-16 cursor-pointer flex flex-col items-center justify-center shadow-lg shadow-black/20"
+            className={`border-2 border-dashed ${theme === 'dark' ? 'border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800/80' : 'border-zinc-300 bg-white hover:bg-zinc-50'} hover:border-indigo-500 transition-all rounded-3xl p-16 cursor-pointer flex flex-col items-center justify-center shadow-lg`}
           >
             <UploadCloud className="w-16 h-16 text-indigo-400 mb-6" />
-            <h3 className="text-xl font-bold text-white mb-2">Drag & Drop your file</h3>
+            <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'} mb-2`}>Drag & Drop your file</h3>
             <p className="text-zinc-500 mb-6 text-sm">Supports PDF, MP4, PPTX, DOCX (Max 50MB)</p>
-            <button className="px-6 py-2.5 bg-zinc-800 text-white rounded-xl font-medium border border-zinc-700 hover:bg-zinc-700 transition">
+            <button className={`px-6 py-2.5 ${theme === 'dark' ? 'bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-900 border-zinc-200 hover:bg-zinc-200'} rounded-xl font-medium border transition`}>
               Browse Files
             </button>
             <input 

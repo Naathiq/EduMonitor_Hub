@@ -40,6 +40,20 @@
         "updatedAt": { "type": "number" }
       },
       "required": ["id", "teacherId", "time", "subject", "topic", "book", "materials", "videoRecorded", "homework", "date", "createdAt", "updatedAt"]
+    },
+    "ToolLinks": {
+      "title": "ToolLinks",
+      "description": "User specific custom tool links",
+      "type": "object",
+      "properties": {
+        "teacherId": { "type": "string" },
+        "links": { 
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["teacherId", "links", "updatedAt"]
     }
   },
   "firestore": {
@@ -50,6 +64,10 @@
     "/periods/{periodId}": {
       "schema": { "$ref": "#/entities/Period" },
       "description": "Store all daily schedule periods for teachers"
+    },
+    "/toolLinks/{teacherId}": {
+      "schema": { "$ref": "#/entities/ToolLinks" },
+      "description": "Store custom tool links for teachers"
     }
   }
 }

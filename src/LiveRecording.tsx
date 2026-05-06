@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera, CheckCircle2, Loader2, Play, Square, Video } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export default function LiveRecording() {
+export default function LiveRecording({ theme = 'dark' }: { theme?: 'light' | 'dark' }) {
   const [recordingState, setRecordingState] = useState<'setup' | 'recording' | 'processing' | 'completed'>('setup');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -71,13 +71,13 @@ export default function LiveRecording() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-12 text-center max-w-lg w-full shadow-2xl"
+          className={`${theme === 'dark' ? 'bg-zinc-900/40 border-zinc-800' : 'bg-white border-zinc-200 shadow-xl'} border rounded-3xl p-12 text-center max-w-lg w-full`}
         >
           <div className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/20">
             <Camera className="w-10 h-10 text-indigo-400" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Live Class Recording</h2>
-          <p className="text-zinc-400 mb-8 max-w-sm mx-auto">
+          <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-zinc-900'} mb-4`}>Live Class Recording</h2>
+          <p className={`${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'} mb-8 max-w-sm mx-auto`}>
             Start a new live session. The recording will be automatically processed and optimized for all students.
           </p>
           <button 

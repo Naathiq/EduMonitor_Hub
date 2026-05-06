@@ -46,6 +46,14 @@ service cloud.firestore {
              && data.updatedAt is timestamp;
     }
 
+    function isValidToolLinks(data) {
+      return data.keys().hasAll(['teacherId', 'links', 'updatedAt'])
+             && data.keys().size() == 3
+             && data.teacherId == request.auth.uid
+             && data.links is map
+             && data.updatedAt is timestamp;
+    }
+
     match /students/{studentId} {
       allow get: if isSignedIn() && existing().teacherId == request.auth.uid;
       allow list: if isSignedIn() && resource.data.teacherId == request.auth.uid;
@@ -80,6 +88,18 @@ service cloud.firestore {
                     && incoming().updatedAt == request.time
                     && incoming().diff(existing()).affectedKeys().hasOnly(['time', 'subject', 'topic', 'book', 'materials', 'videoRecorded', 'videoLink', 'homework', 'date', 'updatedAt']);
       allow delete: if isSignedIn() && isValidId(periodId) && existing().teacherId == request.auth.uid;
+    }
+
+    match /toolLinks/{teacherId} {
+      allow get: if isSignedIn() && teacherId == request.auth.uid;
+      allow create: if isSignedIn() && teacherId == request.auth.uid
+                    && isValidToolLinks(incoming())
+                    && incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && teacherId == request.auth.uid
+                    && isValidToolLinks(incoming())
+                    && incoming().teacherId == existing().teacherId
+                    && incoming().updatedAt == request.time
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['links', 'updatedAt']);
     }
   }
 }
